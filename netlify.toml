@@ -1,0 +1,3 @@
+# MessMate is a static frontend; serve the files in public/ as the site root.
+[build]
+  publish = "public"
