@@ -1,0 +1,10 @@
+[build]
+  # The site is static; serve the files in public/ directly
+  publish = "public"
+  command = ""
+
+# Single-page app: send unknown paths back to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
