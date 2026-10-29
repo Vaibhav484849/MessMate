@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MessMate — Hostel Mess & Raw Material Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top App Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <span class="brand-icon">🍲</span>
+        <div>
+          <h1 class="brand-title">MessMate</h1>
+          <p class="brand-subtitle">Hostel Mess & Raw Material Management System</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="hostel-selector-wrapper">
+          <label for="globalHostelSelect">Active Hostel:</label>
+          <select id="globalHostelSelect" class="form-select-sm">
+            <option value="all">🏢 All Hostels (4)</option>
+            <option value="1">Nek Chand 1 (Boys)</option>
+            <option value="2">Nek Chand 2 (Boys)</option>
+            <option value="3">Zakir 1 (Girls)</option>
+            <option value="4">Zakir 2 (Girls)</option>
+          </select>
+        </div>
+        <span class="badge badge-dbms">DBMS Project</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Secondary Tab Navigation -->
+  <nav class="sub-nav">
+    <div class="nav-container">
+      <button class="nav-btn active" data-tab="tab-dashboard">
+        <span class="icon">📊</span> Dashboard & Alerts
+      </button>
+      <button class="nav-btn" data-tab="tab-inventory">
+        <span class="icon">📦</span> Hostel Inventory
+      </button>
+      <button class="nav-btn" data-tab="tab-inward">
+        <span class="icon">📥</span> Receive Stock (Inward)
+      </button>
+      <button class="nav-btn" data-tab="tab-meals">
+        <span class="icon">🍽️</span> Daily Meals & Consumption
+      </button>
+      <button class="nav-btn" data-tab="tab-replenish">
+        <span class="icon">📋</span> Replenishment & Reports
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Application Body -->
+  <main class="main-container">
+
+    <!-- ================================================================= -->
+    <!-- TAB 1: DASHBOARD & ALERTS                                         -->
+    <!-- ================================================================= -->
+    <section id="tab-dashboard" class="tab-pane active">
+      <!-- KPI Stats Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon icon-blue">🏢</div>
+          <div class="kpi-content">
+            <span class="kpi-label">Managed Hostels</span>
+            <span class="kpi-value" id="kpiTotalHostels">4</span>
+            <span class="kpi-foot">Capacity: <strong id="kpiTotalCapacity">1,700</strong> students</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon icon-green">🌾</div>
+          <div class="kpi-content">
+            <span class="kpi-label">Catalog Items</span>
+            <span class="kpi-value" id="kpiTotalItems">23</span>
+            <span class="kpi-foot">Grains, Pulses, Dairy, Oils, Veggies</span>
+          </div>
+        </div>
+
+        <div class="kpi-card alert-card">
+          <div class="kpi-icon icon-red">⚠️</div>
+          <div class="kpi-content">
+            <span class="kpi-label">Low Stock Alerts</span>
+            <span class="kpi-value text-danger" id="kpiLowStock">5</span>
+            <span class="kpi-foot text-danger">Items $\le$ Reorder Threshold</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon icon-amber">💰</div>
+          <div class="kpi-content">
+            <span class="kpi-label">Total Stock Inward</span>
+            <span class="kpi-value" id="kpiTotalSpend">₹ 86,415</span>
+            <span class="kpi-foot">Verified Supplier Invoices</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Urgent Low Stock Alerts Banner -->
+      <div class="card alert-box" id="lowStockAlertBanner">
+        <div class="alert-box-header">
+          <div>
+            <h3 class="alert-title">🚨 Low Stock Warnings (Threshold Reached)</h3>
+            <p class="alert-sub">The following raw materials have fallen below the safety reorder level and require replenishment.</p>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="switchTab('tab-replenish')">Generate Replenishment Order</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="lowStockTable">
+            <thead>
+              <tr>
+                <th>Hostel</th>
+                <th>Material</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Reorder Level</th>
+                <th>Deficit</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="lowStockTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4 Hostels Overview Grid -->
+      <h3 class="section-title">Hostel Mess Facilities</h3>
+      <div class="hostel-cards-grid" id="hostelCardsGrid">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+
+    <!-- ================================================================= -->
+    <!-- TAB 2: HOSTEL INVENTORY                                           -->
+    <!-- ================================================================= -->
+    <section id="tab-inventory" class="tab-pane">
+      <div class="card">
+        <div class="card-header-bar">
+          <div>
+            <h2 class="card-heading">Hostel Stock Balances</h2>
+            <p class="card-caption">Real-time stock of grains, pulses, dairy, oils, and vegetables by hostel.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openStockModal()">+ Receive Inward Stock</button>
+        </div>
+
+        <!-- Filters Toolbar -->
+        <div class="filters-bar">
+          <div class="filter-item">
+            <label for="invHostelFilter">Hostel:</label>
+            <select id="invHostelFilter" class="form-select">
+              <option value="all">All Hostels</option>
+              <option value="1">Nek Chand 1</option>
+              <option value="2">Nek Chand 2</option>
+              <option value="3">Zakir 1</option>
+              <option value="4">Zakir 2</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label for="invCategoryFilter">Category:</label>
+            <select id="invCategoryFilter" class="form-select">
+              <option value="all">All Categories</option>
+              <option value="Grains & Cereals">Grains & Cereals</option>
+              <option value="Pulses & Lentils">Pulses & Lentils</option>
+              <option value="Oils & Ghee">Oils & Ghee</option>
+              <option value="Dairy">Dairy</option>
+              <option value="Vegetables">Vegetables</option>
+              <option value="Spices & Condiments">Spices & Condiments</option>
+              <option value="Bakery & Others">Bakery & Others</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label for="invStockFilter">Stock Status:</label>
+            <select id="invStockFilter" class="form-select">
+              <option value="all">All Stock Levels</option>
+              <option value="low">Low Stock Only ⚠️</option>
+              <option value="sufficient">Sufficient Only ✅</option>
+            </select>
+          </div>
+
+          <div class="filter-item search-grow">
+            <label for="invSearch">Search Material:</label>
+            <input type="text" id="invSearch" class="form-input" placeholder="e.g. Rice, Dal, Milk, Oil...">
+          </div>
+        </div>
+
+        <!-- Inventory Data Table -->
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Hostel</th>
+                <th>Raw Material</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Reorder Level</th>
+                <th>Stock Health</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================================================================= -->
+    <!-- TAB 3: STOCK INWARD (RECEIVE SUPPLIES)                            -->
+    <!-- ================================================================= -->
+    <section id="tab-inward" class="tab-pane">
+      <div class="grid-2col">
+        <!-- Inward Entry Form -->
+        <div class="card">
+          <h2 class="card-heading">📥 Record Inward Stock</h2>
+          <p class="card-caption">Log raw materials received from suppliers to update current inventory balance.</p>
+
+          <form id="stockInwardForm" class="form-styled">
+            <div class="form-group">
+              <label for="inwardHostel">Destination Hostel *</label>
+              <select id="inwardHostel" class="form-select" required>
+                <option value="">-- Select Hostel --</option>
+                <option value="1">Nek Chand 1 (Boys)</option>
+                <option value="2">Nek Chand 2 (Boys)</option>
+                <option value="3">Zakir 1 (Girls)</option>
+                <option value="4">Zakir 2 (Girls)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="inwardItem">Raw Material *</label>
+              <select id="inwardItem" class="form-select" required>
+                <option value="">-- Select Raw Material --</option>
+                <!-- Populated via JS -->
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="inwardQuantity">Quantity Received *</label>
+                <div class="input-with-unit">
+                  <input type="number" id="inwardQuantity" class="form-input" step="0.5" min="0.5" placeholder="e.g. 50" required>
+                  <span id="inwardUnitLabel" class="input-unit">unit</span>
+                </div>
+              </div>
+
+              <div class="form-group col-half">
+                <label for="inwardUnitPrice">Unit Price (₹) *</label>
+                <input type="number" id="inwardUnitPrice" class="form-input" step="0.5" min="0" placeholder="e.g. 48.00" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Estimated Total Cost: <strong id="inwardTotalCostText" class="text-primary">₹ 0.00</strong></label>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="inwardSupplier">Supplier / Vendor *</label>
+                <input type="text" id="inwardSupplier" class="form-input" placeholder="e.g. Kisan Agro Foods" required>
+              </div>
+
+              <div class="form-group col-half">
+                <label for="inwardInvoice">Invoice / Ref No.</label>
+                <input type="text" id="inwardInvoice" class="form-input" placeholder="e.g. INV-2026-107">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="inwardDate">Received Date *</label>
+              <input type="date" id="inwardDate" class="form-input" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Confirm & Update Stock</button>
+          </form>
+        </div>
+
+        <!-- Recent Transactions Log -->
+        <div class="card">
+          <div class="card-header-bar">
+            <div>
+              <h2 class="card-heading">Recent Inward Shipments</h2>
+              <p class="card-caption">Audit ledger of purchased raw materials.</p>
+            </div>
+            <span class="badge badge-info" id="txCountBadge">0 records</span>
+          </div>
+
+          <div class="table-responsive max-h-500">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Hostel</th>
+                  <th>Material</th>
+                  <th>Qty</th>
+                  <th>Total Cost</th>
+                  <th>Supplier</th>
+                  <th>Invoice</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================================================================= -->
+    <!-- TAB 4: DAILY MEALS & CONSUMPTION                                  -->
+    <!-- ================================================================= -->
+    <section id="tab-meals" class="tab-pane">
+      <div class="grid-2col">
+        <!-- Log Meal Form -->
+        <div class="card">
+          <h2 class="card-heading">🍽️ Record Daily Meal & Portions</h2>
+          <p class="card-caption">Record meal served and deduct consumed raw materials from hostel stock.</p>
+
+          <form id="mealLogForm" class="form-styled">
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="mealHostel">Hostel *</label>
+                <select id="mealHostel" class="form-select" required>
+                  <option value="1">Nek Chand 1 (Boys)</option>
+                  <option value="2">Nek Chand 2 (Boys)</option>
+                  <option value="3">Zakir 1 (Girls)</option>
+                  <option value="4">Zakir 2 (Girls)</option>
+                </select>
+              </div>
+
+              <div class="form-group col-half">
+                <label for="mealDate">Date *</label>
+                <input type="date" id="mealDate" class="form-input" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="mealType">Meal Slot *</label>
+                <select id="mealType" class="form-select" required>
+                  <option value="Breakfast">Breakfast</option>
+                  <option value="Lunch" selected>Lunch</option>
+                  <option value="Snacks">Snacks</option>
+                  <option value="Dinner">Dinner</option>
+                </select>
+              </div>
+
+              <div class="form-group col-half">
+                <label for="mealPortions">Portions Served *</label>
+                <input type="number" id="mealPortions" class="form-input" min="1" placeholder="e.g. 420" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="mealDishes">Food Items Prepared *</label>
+              <input type="text" id="mealDishes" class="form-input" placeholder="e.g. Rajma, Jeera Rice, Tawa Roti, Salad" required>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Primary Raw Material Consumed -->
+            <h4 class="sub-heading">Primary Raw Material Consumed</h4>
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="mealPrimaryItem">Ingredient 1 *</label>
+                <select id="mealPrimaryItem" class="form-select" required>
+                  <!-- Populated via JS -->
+                </select>
+              </div>
+              <div class="form-group col-half">
+                <label for="mealPrimaryQty">Quantity Consumed *</label>
+                <input type="number" id="mealPrimaryQty" class="form-input" step="0.5" min="0.5" placeholder="e.g. 35" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="mealSecondaryItem">Ingredient 2 (Optional)</label>
+                <select id="mealSecondaryItem" class="form-select">
+                  <option value="">-- None --</option>
+                  <!-- Populated via JS -->
+                </select>
+              </div>
+              <div class="form-group col-half">
+                <label for="mealSecondaryQty">Quantity Consumed</label>
+                <input type="number" id="mealSecondaryQty" class="form-input" step="0.5" min="0" placeholder="e.g. 40">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Record Meal & Deduct Stock</button>
+          </form>
+        </div>
+
+        <!-- Meals Logged Table -->
+        <div class="card">
+          <div class="card-header-bar">
+            <div>
+              <h2 class="card-heading">Meals Prepared & Consumptions</h2>
+              <p class="card-caption">Daily kitchen logs with food items and portions served.</p>
+            </div>
+            <span class="badge badge-info" id="mealsCountBadge">0 meals</span>
+          </div>
+
+          <div class="table-responsive max-h-500">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Hostel</th>
+                  <th>Meal Slot</th>
+                  <th>Menu / Food Prepared</th>
+                  <th>Portions</th>
+                  <th>Ingredients Consumed</th>
+                </tr>
+              </thead>
+              <tbody id="mealsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================================================================= -->
+    <!-- TAB 5: REPLENISHMENT & REPORTS                                    -->
+    <!-- ================================================================= -->
+    <section id="tab-replenish" class="tab-pane">
+      <div class="card">
+        <div class="card-header-bar">
+          <div>
+            <h2 class="card-heading">📋 Material Replenishment Requirement Report</h2>
+            <p class="card-caption">
+              Automated deficit calculation using formula: 
+              <code>Replenishment Order = (Reorder Level &times; 2) - Current Stock</code>
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print Report</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Hostel</th>
+                <th>Raw Material</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Safety Threshold (Reorder)</th>
+                <th>Deficit</th>
+                <th>Suggested Order Quantity</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody id="replenishmentTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Hostel Mess Comparison Summary -->
+      <div class="card mt-24">
+        <h2 class="card-heading">Hostel Consumption & Spending Summary</h2>
+        <p class="card-caption">Comparative breakdown of student capacity, inward expenditure, and active meals.</p>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Hostel Name</th>
+                <th>Type</th>
+                <th>Student Capacity</th>
+                <th>Mess Manager</th>
+                <th>Contact</th>
+                <th>Total Inward Supplies</th>
+                <th>Low-Stock Alerts</th>
+              </tr>
+            </thead>
+            <tbody id="hostelSummaryTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Quick Stock Inward Modal -->
+  <div id="quickStockModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Quick Stock Restock</h3>
+        <button class="modal-close" onclick="closeStockModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Restocking <strong id="modalItemName">Item</strong> for <strong id="modalHostelName">Hostel</strong></p>
+        <form id="quickRestockForm" class="form-styled">
+          <input type="hidden" id="modalHostelId">
+          <input type="hidden" id="modalItemId">
+
+          <div class="form-group">
+            <label for="modalQty">Quantity to Add (<span id="modalUnit">unit</span>):</label>
+            <input type="number" id="modalQty" class="form-input" min="1" step="1" required>
+          </div>
+          <div class="form-group">
+            <label for="modalPrice">Unit Price (₹):</label>
+            <input type="number" id="modalPrice" class="form-input" min="1" step="0.5" value="50.00" required>
+          </div>
+          <div class="form-group">
+            <label for="modalSupplier">Supplier Name:</label>
+            <input type="text" id="modalSupplier" class="form-input" value="Standard Mandi Vendor" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Confirm Restock</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="toast">Stock updated successfully!</div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p><strong>MessMate</strong> — College DBMS Project | Normalized 3NF Architecture | MySQL Stored Programs & Views</p>
+    <p class="footer-meta">Hostels: Nek Chand 1, Nek Chand 2, Zakir 1, Zakir 2</p>
+  </footer>
+
+  <!-- Vanilla JavaScript -->
+  <script src="js/app.js"></script>
+</body>
+</html>

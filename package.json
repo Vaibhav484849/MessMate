@@ -1,0 +1,24 @@
+{
+  "name": "messmate",
+  "version": "1.0.0",
+  "description": "Hostel Mess and Raw Material Management System - College DBMS Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "dbms",
+    "mysql",
+    "hostel-mess",
+    "inventory-management"
+  ],
+  "author": "College DBMS Project",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mysql2": "^3.12.0"
+  }
+}
