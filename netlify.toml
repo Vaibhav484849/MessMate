@@ -1,0 +1,3 @@
+[build]
+  # The MessMate frontend is fully static and lives in /public
+  publish = "public"
